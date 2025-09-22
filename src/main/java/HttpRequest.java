@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -88,16 +90,14 @@ public class HttpRequest {
         arguments = new HashMap<>();
 
         if (splitPathWithArguments.length > 1) {
-            var argumentsStr = splitPathWithArguments[1].split("&");
+            var decoded = URLDecoder.decode(splitPathWithArguments[1], StandardCharsets.UTF_8);
+
+            var argumentsStr = decoded.split("&");
 
             for (var arg : argumentsStr) {
-                var argKeyValue = arg.split("=");
+                var indexOfEquality = arg.indexOf("=");
 
-                if (argKeyValue.length != 2) {
-                    throw new IllegalArgumentException("failed to parse HTTP request");
-                }
-
-                arguments.put(argKeyValue[0], argKeyValue[1]);
+                arguments.put(arg.substring(0, indexOfEquality), arg.substring(indexOfEquality + 1));
             }
         }
 
