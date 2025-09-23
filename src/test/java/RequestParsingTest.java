@@ -27,9 +27,17 @@ public class RequestParsingTest {
 
         Assertions.assertEquals(2, args.size());
 
-        Assertions.assertEquals("Мой восхитительный логин", args.get("login"));
+        var loginArgumentValues = args.get("login");
 
-        Assertions.assertEquals("Мой неповторимый пароль с необычными символами: !\"№;%:?*()_+{}[]/\\|\";<>_=#@$", args.get("password"));
+        Assertions.assertEquals(1, loginArgumentValues.size());
+
+        Assertions.assertEquals("Мой восхитительный логин", loginArgumentValues.getFirst());
+
+        var passwordArgumentValues = args.get("password");
+
+        Assertions.assertEquals(1, passwordArgumentValues.size());
+
+        Assertions.assertEquals("Мой неповторимый пароль с необычными символами: !\"№;%:?*()_+{}[]/\\|\";<>_=#@$", passwordArgumentValues.getFirst());
 
         var headers = r.getHeaders();
 

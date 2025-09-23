@@ -68,9 +68,11 @@ public class Main {
                     responseStrBuilder.append("Received URL arguments:\n");
 
                     for (var argument : arguments.entrySet()) {
-                        responseStrBuilder.append(
-                                String.format("\"%s\" = \"%s\"\n", argument.getKey(), argument.getValue())
-                        );
+                        for (var argValue : argument.getValue()) {
+                            responseStrBuilder.append(
+                                    String.format("\"%s\" = \"%s\"\n", argument.getKey(), argValue)
+                            );
+                        }
                     }
 
                     var responseBytes = responseStrBuilder.toString().getBytes();

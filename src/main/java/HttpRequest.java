@@ -5,16 +5,14 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class HttpRequest {
     private final BufferedInputStream is;
     private final Reader reader;
     private final String method;
     private final String path;
-    private final Map<String, String> arguments;
+    private final Map<String, List<String>> arguments;
     private final Map<String, String> headers;
 
     public HttpRequest(InputStream connection) throws Exception {
@@ -34,7 +32,7 @@ public class HttpRequest {
                 current = reader.read();
 
                 if (current == -1) {
-                    throw new IllegalArgumentException("failed to parse HTTP request");
+                    throw new HttpParsingException("failed to parse HTTP request");
                 }
 
                 if (parsed < lastSymbols.length) {
@@ -76,13 +74,13 @@ public class HttpRequest {
         var protocol = sc.next();
 
         if (!protocol.equals("HTTP/1.1")) {
-            throw new IllegalArgumentException("failed to parse HTTP request");
+            throw new HttpParsingException("failed to parse HTTP request");
         }
 
         var splitPathWithArguments = pathWithArguments.split("\\?");
 
         if (splitPathWithArguments.length > 2) {
-            throw new IllegalArgumentException("failed to parse HTTP request");
+            throw new HttpParsingException("failed to parse HTTP request");
         }
 
         path = splitPathWithArguments[0];
@@ -97,14 +95,28 @@ public class HttpRequest {
             for (var arg : argumentsStr) {
                 var indexOfEquality = arg.indexOf("=");
 
-                arguments.put(arg.substring(0, indexOfEquality), arg.substring(indexOfEquality + 1));
+                var key = arg.substring(0, indexOfEquality);
+
+                var value = arg.substring(indexOfEquality + 1);
+
+                var alreadyAdded = arguments.getOrDefault(key, null);
+
+                if (alreadyAdded == null) {
+                    var newList = new ArrayList<String>();
+
+                    newList.add(value);
+
+                    arguments.put(key, newList);
+                } else {
+                    alreadyAdded.add(value);
+                }
             }
         }
 
         var empty = sc.nextLine();
 
         if (!empty.isBlank()) {
-            throw new IllegalArgumentException("failed to parse HTTP request");
+            throw new HttpParsingException("failed to parse HTTP request");
         }
 
         headers = new HashMap<>();
@@ -124,7 +136,7 @@ public class HttpRequest {
                 endOfSemicolon = indexOfSemicolon + 1;
 
                 if (indexOfSemicolon == -1) {
-                    throw new IllegalArgumentException("failed to parse HTTP request");
+                    throw new HttpParsingException("failed to parse HTTP request");
                 }
             }
 
@@ -140,7 +152,7 @@ public class HttpRequest {
         return path;
     }
 
-    public Map<String, String> getArguments() {
+    public Map<String, List<String>> getArguments() {
         return arguments;
     }
 
