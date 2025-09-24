@@ -1,3 +1,5 @@
+import org.apache.hc.core5.http.HttpStatus;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -232,13 +234,34 @@ public class HttpServer {
         }
     }
 
+    private void writeResponse(BufferedOutputStream output, int statusCode, String statusDescription) throws IOException {
+        output.write(
+                (
+                        "HTTP/1.1 " + statusCode + " " + statusDescription + "\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Connection: close\r\n" +
+                                "\r\n"
+                ).getBytes()
+        );
+    }
+
     private void serveConnection(Socket socket) {
         try (socket) {
-            var request = new HttpRequest(socket.getInputStream());
+            var output = new BufferedOutputStream(socket.getOutputStream());
+
+            HttpRequest request;
+
+            try {
+                request = new HttpRequest(socket.getInputStream());
+            } catch (HttpParsingException e) {
+                writeResponse(output, HttpStatus.SC_BAD_REQUEST, "Bad Request");
+
+                output.flush();
+
+                throw e;
+            }
 
             var handler = handlers.getOrDefault(new HandlerKey(request.getMethod(), request.getPath()), null);
-
-            var output = new BufferedOutputStream(socket.getOutputStream());
 
             try {
                 if (handler == null) {
